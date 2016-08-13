@@ -28,10 +28,13 @@ private slots:
 
     void on_tableWidget_cellChanged(int row, int column);
 
+    void on_act_about_triggered();
+
 private:
     Ui::ReadExcel *ui;
 
     QString m_fileName;       //文件名
+    QString cBox_text;
     QList<QPoint> cellList; //记录修改内容的位置
 };
 

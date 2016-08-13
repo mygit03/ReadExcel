@@ -13,11 +13,14 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        readexcel.cpp
+        readexcel.cpp \
+    about.cpp
 
-HEADERS  += readexcel.h
+HEADERS  += readexcel.h \
+    about.h
 
-FORMS    += readexcel.ui
+FORMS    += readexcel.ui \
+    about.ui
 
 DISTFILES += \
     MyApp.rc

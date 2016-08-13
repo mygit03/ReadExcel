@@ -1,11 +1,14 @@
 #include "readexcel.h"
 #include "ui_readexcel.h"
 
+#include "about.h"
+
 #include <QFileDialog>
 #include <QtXlsx>
 #include <QDebug>
 #include <QStandardPaths>
 #include <QTableWidgetItem>
+#include <QMessageBox>
 
 ReadExcel::ReadExcel(QWidget *parent) :
     QMainWindow(parent),
@@ -24,8 +27,8 @@ ReadExcel::~ReadExcel()
 void ReadExcel::init()
 {
     setWindowTitle(tr("读Excel文件"));
-    ui->tableWidget->horizontalHeader()->setVisible(false);
 
+    ui->tableWidget->horizontalHeader()->setVisible(false);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     connect(ui->btn_openExcel, SIGNAL(clicked()), this, SLOT(slot_openExcel()));
@@ -54,7 +57,7 @@ void ReadExcel::readToTable(const QString sheet)
     for(int i = 0; i < rows; i++){
         for (int j = 0; j < cols; j++){
             QString text = xlsx.read(i+1, j+1).toString();
-            qDebug() << "text:" << text;
+//            qDebug() << "text:" << text;
             QTableWidgetItem *item = new QTableWidgetItem(text);
             item->setTextAlignment(Qt::AlignCenter);                //设置居中对齐
             ui->tableWidget->setItem(i, j, item);
@@ -69,6 +72,7 @@ void ReadExcel::writeToExcel(const QString sheet)
 {
     qDebug() << "write:" << sheet;
     QXlsx::Document xlsx(m_fileName);
+    xlsx.selectSheet(sheet);
 
     //遍历修改记录并写入Excel文件保存
     foreach (QPoint point, cellList) {
@@ -99,6 +103,9 @@ void ReadExcel::slot_openExcel()
     qDebug() << "sheetList:" << sheetList << QFileInfo(m_fileName).fileName();
     ui->comboBox->addItems(sheetList);
 
+    cBox_text = ui->comboBox->currentText();
+    qDebug() << "cBox_text open:" << cBox_text;
+
     QString curSheet = ui->comboBox->currentText();
     readToTable(curSheet);
 
@@ -107,15 +114,29 @@ void ReadExcel::slot_openExcel()
 
 void ReadExcel::slot_saveExcel()
 {
-    qDebug() << "save!";
-    writeToExcel(ui->comboBox->currentText());
+    qDebug() << "save!" << cBox_text << ui->comboBox->currentText();
+    writeToExcel(cBox_text);
     ui->statusBar->showMessage(tr("文件已保存!"), 3000);
 }
 
 void ReadExcel::on_comboBox_activated(const QString &arg1)
 {
     qDebug() << "arg1:" << arg1;
-    readToTable(arg1);
+    if (!cellList.isEmpty()){
+        int ret = QMessageBox::warning(this, tr("警告"), tr("文件已修改,是否保存?"),
+                                       tr("是"), tr("否"), 0, 1);
+        switch (ret) {
+        case 0:
+            qDebug() << "cBox_text:::" << cBox_text;
+            writeToExcel(cBox_text);
+            break;
+        default:
+            break;
+        }
+    }
+    cBox_text = arg1;
+    qDebug() << "cBox_text:" << cBox_text;
+    readToTable(cBox_text);
 }
 
 void ReadExcel::on_tableWidget_cellChanged(int row, int column)
@@ -124,4 +145,10 @@ void ReadExcel::on_tableWidget_cellChanged(int row, int column)
     QPoint point(row + 1, column + 1);
     cellList.append(point);
 //    qDebug() << "point:" << point << point.x() << point.y() << "cellList:" << cellList;
+}
+
+void ReadExcel::on_act_about_triggered()
+{
+    About dlg;
+    dlg.exec();
 }
